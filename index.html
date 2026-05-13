@@ -27,6 +27,12 @@
     </div>
 
     <script>
+// Einfache Abfrage beim Laden der Seite
+const passwort = prompt("Bitte Soudal-Passwort eingeben:");
+if (passwort !== "Soudal2026") { // Ersetze "Soudal2026" durch dein Wunsch-Passwort
+    alert("Falsches Passwort!");
+    document.body.innerHTML = "<h1>Zugriff verweigert</h1>";
+}
         // Hier binden wir später das Google Sheet an. 
         // Für den ersten Test nutzen wir lokale Beispieldaten:
         const database = [
