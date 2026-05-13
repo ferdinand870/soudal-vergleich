@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soudal Österreich - Produktvergleich</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h2 { color: #d71920; } /* Soudal Rot */
+        input { width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        .result-card { border: 1px solid #ddd; padding: 15px; border-radius: 4px; display: none; background: #fff; }
+        .keyfacts { font-weight: bold; margin-top: 10px; }
+        a { color: #d71920; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Produktvergleich Intern</h2>
+        <input type="text" id="searchInput" placeholder="Wettbewerbsprodukt eingeben..." onkeyup="searchProduct()">
+        
+        <div id="result" class="result-card">
+            <h3 id="soudalName"></h3>
+            <p id="keyfacts" class="keyfacts"></p>
+            <p><a id="link" href="#" target="_blank">Technisches Datenblatt (PDF)</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Hier binden wir später das Google Sheet an. 
+        // Für den ersten Test nutzen wir lokale Beispieldaten:
+        const database = [
+            { comp: "Hilti CF-I", soudal: "Soudafoam Gun", facts: "Höhere Ausbeute, 60l.", link: "https://www.soudal.at" },
+            { comp: "Fischer Montagekleber", soudal: "Fix ALL High Tack", facts: "Sofortfest, UV-stabil.", link: "https://www.soudal.at" }
+        ];
+
+        function searchProduct() {
+            const input = document.getElementById('searchInput').value.toLowerCase();
+            const resultDiv = document.getElementById('result');
+            
+            const match = database.find(p => p.comp.toLowerCase().includes(input) && input.length > 2);
+
+            if (match) {
+                resultDiv.style.display = 'block';
+                document.getElementById('soudalName').innerText = "Soudal Alternative: " + match.soudal;
+                document.getElementById('keyfacts').innerText = "Keyfacts: " + match.facts;
+                document.getElementById('link').href = match.link;
+            } else {
+                resultDiv.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
