@@ -1,60 +1,110 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Soudal Österreich - Produktvergleich</title>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        h2 { color: #d71920; } /* Soudal Rot */
-        input { width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .result-card { border: 1px solid #ddd; padding: 15px; border-radius: 4px; display: none; background: #fff; }
-        .keyfacts { font-weight: bold; margin-top: 10px; }
-        a { color: #d71920; text-decoration: none; font-weight: bold; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h2>Produktvergleich Intern</h2>
-        <input type="text" id="searchInput" placeholder="Wettbewerbsprodukt eingeben..." onkeyup="searchProduct()">
-        
-        <div id="result" class="result-card">
-            <h3 id="soudalName"></h3>
-            <p id="keyfacts" class="keyfacts"></p>
-            <p><a id="link" href="#" target="_blank">Technisches Datenblatt (PDF)</a></p>
-        </div>
+<div class="container">
+    <h2>Soudal Produktvergleich</h2>
+    
+    <p>1. Wettbewerber wählen:</p>
+    <select id="compSelect" onchange="updateProductDropdown()" style="width:100%; padding:10px; margin-bottom:15px;">
+        <option value="">-- Bitte wählen --</option>
+    </select>
+
+    <p>2. Produkt wählen:</p>
+    <select id="productSelect" onchange="showResult()" style="width:100%; padding:10px; margin-bottom:20px;" disabled>
+        <option value="">-- Zuerst Wettbewerber wählen --</option>
+    </select>
+    
+    <div id="result" class="result-card">
+        <h3 id="soudalName" style="margin-top:0; color:#d71920;"></h3>
+        <div id="keyfacts" class="keyfacts"></div>
+        <a id="link" class="btn" href="#" target="_blank">Zum Datenblatt</a>
     </div>
+    <div id="status" class="status">Lade Datenbank...</div>
+</div>
 
-    <script>
-// Einfache Abfrage beim Laden der Seite
-const passwort = prompt("Bitte Soudal-Passwort eingeben:");
-if (passwort !== "Soudal2026") { // Ersetze "Soudal2026" durch dein Wunsch-Passwort
-    alert("Falsches Passwort!");
-    document.body.innerHTML = "<h1>Zugriff verweigert</h1>";
-}
-        // Hier binden wir später das Google Sheet an. 
-        // Für den ersten Test nutzen wir lokale Beispieldaten:
-        const database = [
-            { comp: "Hilti CF-I", soudal: "Soudafoam Gun", facts: "Höhere Ausbeute, 60l.", link: "https://www.soudal.at" },
-            { comp: "Fischer Montagekleber", soudal: "Fix ALL High Tack", facts: "Sofortfest, UV-stabil.", link: "https://www.soudal.at" }
-        ];
+<script>
+    // Passwort-Schutz
+    const passwort = prompt("Bitte Soudal-Passwort eingeben:");
+    if (passwort !== "Soudal2026") { 
+        alert("Falsches Passwort!");
+        document.body.innerHTML = "<h1>Zugriff verweigert</h1>";
+    }
 
-        function searchProduct() {
-            const input = document.getElementById('searchInput').value.toLowerCase();
-            const resultDiv = document.getElementById('result');
-            
-            const match = database.find(p => p.comp.toLowerCase().includes(input) && input.length > 2);
+    let database = [];
+    const sheetUrl = '[https://docs.google.com/spreadsheets/d/1WDYdl42LpRWFZ2YmVg9k4tzqhtPqH3ID6T4Rolsafh8/export?format=csv](https://docs.google.com/spreadsheets/d/1WDYdl42LpRWFZ2YmVg9k4tzqhtPqH3ID6T4Rolsafh8/export?format=csv)'; // <-- DEIN LINK HIER EINTRAGEN
 
+    async function loadDatabase() {
+        try {
+            const response = await fetch(sheetUrl);
+            const data = await response.text();
+            const rows = data.split('\n').slice(1);
+            database = rows.map(row => {
+                // Berücksichtigt Kommas in Anführungszeichen (falls in Keyfacts Kommas stehen)
+                const columns = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                return {
+                    compName: columns[0]?.replace(/"/g, '').trim(),
+                    compProd: columns[1]?.replace(/"/g, '').trim(),
+                    soudal: columns[2]?.replace(/"/g, '').trim(),
+                    facts: columns[3]?.replace(/"/g, '').trim(),
+                    link: columns[4]?.replace(/"/g, '').trim()
+                };
+            }).filter(p => p.compName); // Leere Zeilen entfernen
+
+            fillCompanyDropdown();
+            document.getElementById('status').innerText = "Datenbank bereit (" + database.length + " Produkte)";
+        } catch (e) {
+            document.getElementById('status').innerText = "Fehler beim Laden.";
+        }
+    }
+
+    function fillCompanyDropdown() {
+        const compSelect = document.getElementById('compSelect');
+        const companies = [...new Set(database.map(p => p.compName))].sort();
+        
+        companies.forEach(comp => {
+            let opt = document.createElement('option');
+            opt.value = comp;
+            opt.innerHTML = comp;
+            compSelect.appendChild(opt);
+        });
+    }
+
+    function updateProductDropdown() {
+        const compValue = document.getElementById('compSelect').value;
+        const prodSelect = document.getElementById('productSelect');
+        const resultDiv = document.getElementById('result');
+        
+        prodSelect.innerHTML = '<option value="">-- Produkt wählen --</option>';
+        resultDiv.style.display = 'none';
+
+        if (compValue) {
+            const products = database.filter(p => p.compName === compValue).sort((a,b) => a.compProd.localeCompare(b.compProd));
+            products.forEach((p, index) => {
+                let opt = document.createElement('option');
+                opt.value = p.compProd;
+                opt.innerHTML = p.compProd;
+                prodSelect.appendChild(opt);
+            });
+            prodSelect.disabled = false;
+        } else {
+            prodSelect.disabled = true;
+        }
+    }
+
+    function showResult() {
+        const compValue = document.getElementById('compSelect').value;
+        const prodValue = document.getElementById('productSelect').value;
+        const resultDiv = document.getElementById('result');
+
+        if (compValue && prodValue) {
+            const match = database.find(p => p.compName === compValue && p.compProd === prodValue);
             if (match) {
                 resultDiv.style.display = 'block';
                 document.getElementById('soudalName').innerText = "Soudal Alternative: " + match.soudal;
-                document.getElementById('keyfacts').innerText = "Keyfacts: " + match.facts;
+                document.getElementById('keyfacts').innerText = match.facts;
                 document.getElementById('link').href = match.link;
-            } else {
-                resultDiv.style.display = 'none';
             }
+        } else {
+            resultDiv.style.display = 'none';
         }
-    </script>
-</body>
-</html>
+    }
+
+    loadDatabase();
+</script>
