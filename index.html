@@ -8,7 +8,7 @@
         body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4; text-align: center; color: #333; }
         .container { max-width: 600px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
-        /* Logo Styling */
+        /* Logo Fix: Stabile Bildquelle */
         .logo-header { width: 100%; max-width: 200px; margin: 0 auto 25px auto; display: block; }
         
         h2 { color: #d71920; margin-bottom: 30px; font-size: 24px; border-bottom: 2px solid #f4f4f4; padding-bottom: 15px; }
@@ -16,26 +16,24 @@
         
         select { width: 100%; padding: 14px; margin-bottom: 25px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; background-color: #fff; appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,<svg%20xmlns%3D"http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg"%20width%3D"292.4"%20height%3D"292.4"><path%20fill%3D"%23333"%20d%3D"M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z"%2F><%2Fsvg>'); background-repeat: no-repeat; background-position: right%2015px%20top%2050%; background-size: 12px%20auto; }
         
-        .result-card { border: 2px solid #d71920; padding: 25px; border-radius: 6px; display: none; background: #fff; text-align: left; margin-top: 25px; animation: fadeIn 0.3s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .result-card { border: 2px solid #d71920; padding: 25px; border-radius: 6px; display: none; background: #fff; text-align: left; margin-top: 25px; }
         
         .soudal-title { margin-top: 0; color: #d71920; text-align: center; font-size: 20px; }
-        .prod-img { display: block; max-width: 180px; height: auto; margin: 20px auto; border-radius: 4px; transition: transform 0.2s; }
-        .prod-img:hover { transform: scale(1.05); }
         
-        .keyfacts { background: #fdfdfd; padding: 18px; border-radius: 4px; margin: 20px 0; white-space: pre-line; border-left: 5px solid #d71920; line-height: 1.5; font-size: 15px; box-shadow: inset 0 0 5px rgba(0,0,0,0.05); }
+        /* Produktbild: Auf 90px (50%) verkleinert */
+        .prod-img { display: block; max-width: 90px; height: auto; margin: 20px auto; border-radius: 4px; }
         
-        .btn { display: block; background: #d71920; color: white; padding: 15px; text-decoration: none; border-radius: 4px; font-weight: bold; text-align: center; transition: background 0.2s; }
-        .btn:hover { background: #b5151b; }
+        .keyfacts { background: #fdfdfd; padding: 18px; border-radius: 4px; margin: 20px 0; white-space: pre-line; border-left: 5px solid #d71920; line-height: 1.5; font-size: 15px; }
         
-        .status { font-size: 11px; color: #999; margin-top: 25px; letter-spacing: 0.5px; }
+        .btn { display: block; background: #d71920; color: white; padding: 15px; text-decoration: none; border-radius: 4px; font-weight: bold; text-align: center; }
+        .status { font-size: 11px; color: #999; margin-top: 25px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- Soudal Logo von der offiziellen Website -->
-    <img src="https://www.soudal.at/themes/custom/soudal_theme/logo.svg" alt="Soudal Logo" class="logo-header">
+    <!-- Neues Logo-Link (PNG-Format ist stabiler für Einbindungen) -->
+    <img src="https://www.soudal.group/sites/default/files/logo_0.png" alt="Soudal Logo" class="logo-header">
     
     <h2>Produktvergleich</h2>
     
@@ -51,9 +49,7 @@
     
     <div id="result" class="result-card">
         <h3 id="soudalName" class="soudal-title"></h3>
-        
         <img id="productImage" class="prod-img" src="" alt="Soudal Produktbild" style="display:none;">
-        
         <div id="keyfacts" class="keyfacts"></div>
         <a id="link" class="btn" href="#" target="_blank">Zum Produkt / Datenblatt</a>
     </div>
@@ -62,7 +58,6 @@
 </div>
 
 <script>
-    // 1. Authentifizierung
     const passwortAbfrage = prompt("Bitte Soudal-Passwort eingeben:");
     if (passwortAbfrage !== "Soudal2026") { 
         alert("Zugriff verweigert!");
@@ -72,22 +67,17 @@
     let database = [];
     const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTNz0aKaUP6s9baivOaCAKKyMFTcQOQ22qGV1AQqX3k3zJOI2bcnlkV3HGDYU6QgPjz53P_X4LrL187/pub?output=csv';
 
-    // CSV Parser für komplexe Felder (berücksichtigt Anführungszeichen & Trenner)
     function parseCSVLine(line, delimiter) {
         const columns = [];
         let current = '';
         let inQuotes = false;
-
         for (let i = 0; i < line.length; i++) {
             let char = line[i];
-            if (char === '"') {
-                inQuotes = !inQuotes;
-            } else if (char === delimiter && !inQuotes) {
+            if (char === '"') inQuotes = !inQuotes;
+            else if (char === delimiter && !inQuotes) {
                 columns.push(current.trim());
                 current = '';
-            } else {
-                current += char;
-            }
+            } else current += char;
         }
         columns.push(current.trim());
         return columns.map(col => col.replace(/^"|"$/g, '').trim());
@@ -99,7 +89,6 @@
             const text = await response.text();
             const rows = text.split(/\r?\n/).filter(row => row.trim() !== "");
             const delimiter = rows[0].includes(';') ? ';' : ',';
-
             database = rows.slice(1).map(row => {
                 const cols = parseCSVLine(row, delimiter);
                 return {
@@ -108,10 +97,9 @@
                     soudal: cols[2] || "",
                     facts: cols[3] || "",
                     link: cols[4] || "",
-                    imgUrl: cols[5] || "" // Spalte F für Produktbild
+                    imgUrl: cols[5] || ""
                 };
             }).filter(p => p.compName !== "");
-
             fillCompanyDropdown();
             document.getElementById('status').innerText = "Datenbank aktiv (" + database.length + " Produkte geladen)";
         } catch (e) {
@@ -137,7 +125,6 @@
         const resultDiv = document.getElementById('result');
         prodSelect.innerHTML = '<option value="">-- Produkt wählen --</option>';
         resultDiv.style.display = 'none';
-
         if (compValue) {
             const products = database.filter(p => p.compName === compValue).sort((a,b) => a.compProd.localeCompare(b.compProd));
             products.forEach(p => {
@@ -147,9 +134,7 @@
                 prodSelect.appendChild(opt);
             });
             prodSelect.disabled = false;
-        } else {
-            prodSelect.disabled = true;
-        }
+        } else prodSelect.disabled = true;
     }
 
     function showResult() {
@@ -157,7 +142,6 @@
         const prodValue = document.getElementById('productSelect').value;
         const resultDiv = document.getElementById('result');
         const imgElement = document.getElementById('productImage');
-
         if (compValue && prodValue) {
             const match = database.find(p => p.compName === compValue && p.compProd === prodValue);
             if (match) {
@@ -165,17 +149,12 @@
                 document.getElementById('soudalName').textContent = "Soudal Lösung: " + match.soudal;
                 document.getElementById('keyfacts').textContent = match.facts;
                 document.getElementById('link').href = match.link || "#";
-                
                 if (match.imgUrl && match.imgUrl.startsWith('http')) {
                     imgElement.src = match.imgUrl;
                     imgElement.style.display = 'block';
-                } else {
-                    imgElement.style.display = 'none';
-                }
+                } else imgElement.style.display = 'none';
             }
-        } else {
-            resultDiv.style.display = 'none';
-        }
+        } else resultDiv.style.display = 'none';
     }
 
     loadDatabase();
