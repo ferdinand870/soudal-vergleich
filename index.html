@@ -4,15 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Soudal Österreich - Produktvergleich</title>
+    <!-- Integration von PapaParse für fehlerfreie CSV-Verarbeitung -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4; text-align: center; }
         .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         h2 { color: #d71920; margin-bottom: 25px; }
         p { text-align: left; font-weight: bold; margin-bottom: 5px; }
-        select { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; background-color: #fff; }
+        select { width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; background-color: #fff; cursor: pointer; }
         .result-card { border: 2px solid #d71920; padding: 20px; border-radius: 4px; display: none; background: #fff; text-align: left; margin-top: 20px; }
         .keyfacts { background: #f9f9f9; padding: 15px; border-radius: 4px; margin: 15px 0; white-space: pre-line; border-left: 4px solid #d71920; }
-        .btn { display: block; background: #d71920; color: white; padding: 12px; text-decoration: none; border-radius: 4px; font-weight: bold; text-align: center; }
+        .btn { display: block; background: #d71920; color: white; padding: 12px; text-decoration: none; border-radius: 4px; font-weight: bold; text-align: center; margin-top: 10px; }
         .status { font-size: 12px; color: #888; margin-top: 20px; }
     </style>
 </head>
@@ -37,77 +39,51 @@
         <a id="link" class="btn" href="#" target="_blank">Zum Produkt</a>
     </div>
     
-    <div id="status" class="status">Lade Datenbank...</div>
+    <div id="status" class="status">Datenbank wird geladen...</div>
 </div>
 
 <script>
-    // Passwort-Schutz
     const passwortAbfrage = prompt("Bitte Soudal-Passwort eingeben:");
     if (passwortAbfrage !== "Soudal2026") { 
         alert("Zugriff verweigert!");
-        document.body.innerHTML = "<h1>Zugriff verweigert</h1>";
+        document.body.innerHTML = "<h1 style='color:red; text-align:center; margin-top:50px;'>Zugriff verweigert</h1>";
     }
 
     let database = [];
     const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTNz0aKaUP6s9baivOaCAKKyMFTcQOQ22qGV1AQqX3k3zJOI2bcnlkV3HGDYU6QgPjz53P_X4LrL187/pub?output=csv';
 
-    // Hochpräziser CSV-Parser: Ignoriert Trennzeichen innerhalb von Anführungszeichen
-    function parseCSVLine(line, delimiter) {
-        const columns = [];
-        let current = '';
-        let inQuotes = false;
+    function loadDatabase() {
+        Papa.parse(sheetUrl, {
+            download: true,
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+                database = results.data.map(row => ({
+                    compName: row['Wettbewerber Name']?.trim(),
+                    compProd: row['Wettbewerber Produkt']?.trim(),
+                    soudal: row['Soudal Produkt']?.trim(),
+                    facts: row['Keyfacts']?.trim(),
+                    link: row['Link Produkt']?.trim()
+                })).filter(p => p.compName);
 
-        for (let i = 0; i < line.length; i++) {
-            let char = line[i];
-            if (char === '"') {
-                inQuotes = !inQuotes;
-            } else if (char === delimiter && !inQuotes) {
-                columns.push(current.trim());
-                current = '';
-            } else {
-                current += char;
+                fillCompanyDropdown();
+                document.getElementById('status').innerText = "Datenbank bereit (" + database.length + " Produkte geladen)";
+            },
+            error: function() {
+                document.getElementById('status').innerText = "Fehler beim Laden der CSV-Daten.";
             }
-        }
-        columns.push(current.trim());
-        return columns.map(col => col.replace(/^"|"$/g, '').trim());
-    }
-
-    async function loadDatabase() {
-        try {
-            const response = await fetch(sheetUrl);
-            const text = await response.text();
-            const rows = text.split(/\r?\n/).filter(row => row.trim() !== "");
-            
-            // Bestimme Trenner (Europäisches Semikolon vs. Standard-Komma)
-            const firstRow = rows[0] || "";
-            const delimiter = firstRow.includes(';') ? ';' : ',';
-
-            database = rows.slice(1).map(row => {
-                const cols = parseCSVLine(row, delimiter);
-                return {
-                    compName: cols[0] || "",
-                    compProd: cols[1] || "",
-                    soudal: cols[2] || "",
-                    facts: cols[3] || "",
-                    link: cols[4] || ""
-                };
-            }).filter(p => p.compName !== "");
-
-            fillCompanyDropdown();
-            document.getElementById('status').innerText = "Datenbank bereit (" + database.length + " Produkte)";
-        } catch (e) {
-            document.getElementById('status').innerText = "Fehler beim Laden.";
-        }
+        });
     }
 
     function fillCompanyDropdown() {
         const compSelect = document.getElementById('compSelect');
         const companies = [...new Set(database.map(p => p.compName))].sort();
+        
         compSelect.innerHTML = '<option value="">-- Bitte wählen --</option>';
         companies.forEach(comp => {
             let opt = document.createElement('option');
             opt.value = comp;
-            opt.textContent = comp;
+            opt.innerHTML = comp;
             compSelect.appendChild(opt);
         });
     }
@@ -116,6 +92,7 @@
         const compValue = document.getElementById('compSelect').value;
         const prodSelect = document.getElementById('productSelect');
         const resultDiv = document.getElementById('result');
+        
         prodSelect.innerHTML = '<option value="">-- Produkt wählen --</option>';
         resultDiv.style.display = 'none';
 
@@ -124,7 +101,7 @@
             products.forEach(p => {
                 let opt = document.createElement('option');
                 opt.value = p.compProd;
-                opt.textContent = p.compProd;
+                opt.innerHTML = p.compProd;
                 prodSelect.appendChild(opt);
             });
             prodSelect.disabled = false;
@@ -142,9 +119,9 @@
             const match = database.find(p => p.compName === compValue && p.compProd === prodValue);
             if (match) {
                 resultDiv.style.display = 'block';
-                document.getElementById('soudalName').textContent = "Soudal Lösung: " + match.soudal;
-                document.getElementById('keyfacts').textContent = match.facts;
-                document.getElementById('link').href = match.link || "#";
+                document.getElementById('soudalName').innerText = "Soudal Lösung: " + match.soudal;
+                document.getElementById('keyfacts').innerText = match.facts;
+                document.getElementById('link').href = match.link;
             }
         } else {
             resultDiv.style.display = 'none';
