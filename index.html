@@ -6,26 +6,33 @@
     <title>Soudal Österreich - Produktvergleich</title>
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4; text-align: center; color: #333; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .container { max-width: 650px; margin: auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); position: relative; }
         
-        /* Korrigiertes Logo Branding */
         .logo-box { background-color: #d71920; color: white; font-family: 'Arial Black', sans-serif; font-size: 40px; padding: 10px 25px; display: inline-block; margin-bottom: 25px; border-radius: 2px; letter-spacing: -1px; }
         
-        h2 { color: #d71920; margin-bottom: 30px; font-size: 24px; border-bottom: 2px solid #f4f4f4; padding-bottom: 15px; }
+        h2 { color: #d71920; margin-bottom: 30px; font-size: 22px; border-bottom: 2px solid #f4f4f4; padding-bottom: 15px; text-transform: uppercase; }
         p { text-align: left; font-weight: bold; margin-bottom: 8px; color: #555; }
         
         select { width: 100%; padding: 14px; margin-bottom: 25px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; background-color: #fff; appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,<svg%20xmlns%3D"http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg"%20width%3D"292.4"%20height%3D"292.4"><path%20fill%3D"%23333"%20d%3D"M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.4-12.8z"%2F><%2Fsvg>'); background-repeat: no-repeat; background-position: right%2015px%20top%2050%; background-size: 12px%20auto; }
         
         .result-card { border: 2px solid #d71920; padding: 25px; border-radius: 6px; display: none; background: #fff; text-align: left; margin-top: 25px; }
-        .soudal-title { margin-top: 0; color: #d71920; text-align: center; font-size: 20px; }
+        .soudal-title { margin-top: 0; color: #d71920; text-align: center; font-size: 20px; text-transform: uppercase; }
         
-        /* Produktbild: 90px */
         .prod-img { display: block; max-width: 90px; height: auto; margin: 20px auto; border-radius: 4px; }
         
-        .keyfacts { background: #fdfdfd; padding: 18px; border-radius: 4px; margin: 20px 0; white-space: pre-line; border-left: 5px solid #d71920; line-height: 1.5; font-size: 15px; }
+        .info-grid { display: flex; gap: 15px; margin-bottom: 20px; }
+        .info-half { flex: 1; }
+
+        .info-section { margin-bottom: 20px; }
+        .info-label { font-weight: bold; color: #d71920; font-size: 13px; text-transform: uppercase; display: block; margin-bottom: 5px; border-bottom: 1px solid #eee; }
+        .info-content { background: #fdfdfd; padding: 12px; border-radius: 4px; white-space: pre-line; border-left: 4px solid #ccc; line-height: 1.5; font-size: 14px; }
         
-        .btn { display: block; background: #d71920; color: white; padding: 15px; text-decoration: none; border-radius: 4px; font-weight: bold; text-align: center; }
-        .status { font-size: 11px; color: #999; margin-top: 25px; }
+        .color-note { font-size: 11px; color: #777; font-style: italic; margin-top: 4px; display: block; }
+
+        .btn { display: block; background: #d71920; color: white; padding: 15px; text-decoration: none; border-radius: 4px; font-weight: bold; text-align: center; margin-top: 20px; text-transform: uppercase; }
+        
+        .disclaimer { font-size: 10px; color: #999; margin-top: 30px; line-height: 1.4; border-top: 1px solid #eee; padding-top: 15px; text-align: center; }
+        .status { font-size: 11px; color: #bbb; margin-top: 15px; }
     </style>
 </head>
 <body>
@@ -33,7 +40,7 @@
 <div class="container">
     <div class="logo-box">SOUDAL</div>
     
-    <h2>Produktvergleich</h2>
+    <h2>Produktvergleich Österreich</h2>
     
     <p>1. Wettbewerber wählen:</p>
     <select id="compSelect" onchange="updateProductDropdown()">
@@ -47,11 +54,36 @@
     
     <div id="result" class="result-card">
         <h3 id="soudalName" class="soudal-title"></h3>
-        <img id="productImage" class="prod-img" src="" alt="Soudal Produktbild" style="display:none;">
-        <div id="keyfacts" class="keyfacts"></div>
-        <a id="link" class="btn" href="#" target="_blank">Zum Produkt / Datenblatt</a>
+        <img id="productImage" class="prod-img" src="" alt="Produktbild" style="display:none;">
+        
+        <div class="info-grid">
+            <div class="info-half">
+                <span class="info-label">Artikelnummer</span>
+                <div id="artNr" class="info-content"></div>
+            </div>
+            <div class="info-half">
+                <span class="info-label">Farbe</span>
+                <div id="farbe" class="info-content"></div>
+                <span class="color-note">* andere Farben auf Anfrage verfügbar</span>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <span class="info-label">Eigenschaften</span>
+            <div id="eigenschaften" class="info-content"></div>
+        </div>
+
+        <div class="info-section">
+            <span class="info-label">Anwendung</span>
+            <div id="anwendung" class="info-content"></div>
+        </div>
+
+        <a id="link" class="btn" href="#" target="_blank">ZUM PRODUKT / DATENBLATT</a>
     </div>
     
+    <div class="disclaimer">
+        Dies ist ein internes Soudal Tool. Für die Korrektheit der Inhalte wird keine Gewähr übernommen.
+    </div>
     <div id="status" class="status">Initialisiere Datenbank...</div>
 </div>
 
@@ -87,17 +119,22 @@
             const text = await response.text();
             const rows = text.split(/\r?\n/).filter(row => row.trim() !== "");
             const delimiter = rows[0].includes(';') ? ';' : ',';
+            
             database = rows.slice(1).map(row => {
                 const cols = parseCSVLine(row, delimiter);
                 return {
                     compName: cols[0] || "",
                     compProd: cols[1] || "",
                     soudal: cols[2] || "",
-                    facts: cols[3] || "",
-                    link: cols[4] || "",
-                    imgUrl: cols[5] || ""
+                    artNr: cols[3] || "-",
+                    farbe: cols[4] || "-",
+                    eigenschaften: cols[5] || "",
+                    anwendung: cols[6] || "",
+                    link: cols[7] || "",
+                    imgUrl: cols[8] || ""
                 };
             }).filter(p => p.compName !== "");
+            
             fillCompanyDropdown();
             document.getElementById('status').innerText = "Datenbank aktiv (" + database.length + " Produkte geladen)";
         } catch (e) {
@@ -140,17 +177,24 @@
         const prodValue = document.getElementById('productSelect').value;
         const resultDiv = document.getElementById('result');
         const imgElement = document.getElementById('productImage');
+        
         if (compValue && prodValue) {
             const match = database.find(p => p.compName === compValue && p.compProd === prodValue);
             if (match) {
                 resultDiv.style.display = 'block';
                 document.getElementById('soudalName').textContent = "Soudal Lösung: " + match.soudal;
-                document.getElementById('keyfacts').textContent = match.facts;
+                document.getElementById('artNr').textContent = match.artNr;
+                document.getElementById('farbe').textContent = match.farbe;
+                document.getElementById('eigenschaften').textContent = match.eigenschaften;
+                document.getElementById('anwendung').textContent = match.anwendung;
                 document.getElementById('link').href = match.link || "#";
+                
                 if (match.imgUrl && match.imgUrl.startsWith('http')) {
                     imgElement.src = match.imgUrl;
                     imgElement.style.display = 'block';
-                } else imgElement.style.display = 'none';
+                } else {
+                    imgElement.style.display = 'none';
+                }
             }
         } else resultDiv.style.display = 'none';
     }
