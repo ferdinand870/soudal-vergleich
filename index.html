@@ -17,8 +17,8 @@
         
         .result-card { border: 2px solid #d71920; padding: 25px; border-radius: 6px; display: none; background: #fff; text-align: left; margin-top: 25px; }
         
-        /* Soudal Produktname: Groß und ohne Präfix */
-        .soudal-title { margin-top: 0; color: #d71920; text-align: center; font-size: 28px; text-transform: uppercase; font-weight: 900; }
+        /* Soudal Produktname: Groß, ohne Präfix */
+        .soudal-title { margin-top: 0; color: #d71920; text-align: center; font-size: 28px; text-transform: uppercase; font-weight: 900; line-height: 1.2; }
         
         .prod-img { display: block; max-width: 120px; height: auto; margin: 20px auto; border-radius: 4px; }
         
@@ -68,6 +68,12 @@
                 <div id="farbe" class="info-content"></div>
                 <span class="color-note">* andere Farben auf Anfrage verfügbar</span>
             </div>
+        </div>
+
+        <!-- Neue Sektion: Beschreibung -->
+        <div class="info-section">
+            <span class="info-label">Beschreibung</span>
+            <div id="beschreibung" class="info-content"></div>
         </div>
 
         <div class="info-section">
@@ -130,10 +136,11 @@
                     soudal: cols[2] || "",
                     artNr: cols[3] || "-",
                     farbe: cols[4] || "-",
-                    eigenschaften: cols[5] || "",
-                    anwendung: cols[6] || "",
-                    link: cols[7] || "",
-                    imgUrl: cols[8] || ""
+                    beschreibung: cols[5] || "", // Spalte F
+                    eigenschaften: cols[6] || "", // Spalte G
+                    anwendung: cols[7] || "",     // Spalte H
+                    link: cols[8] || "",          // Spalte I
+                    imgUrl: cols[9] || ""         // Spalte J
                 };
             }).filter(p => p.compName !== "");
             
@@ -184,14 +191,16 @@
             const match = database.find(p => p.compName === compValue && p.compProd === prodValue);
             if (match) {
                 resultDiv.style.display = 'block';
-                // Prefix entfernt und Anzeige vergrößert
+                // Soudal Produktname groß anzeigen
                 document.getElementById('soudalName').textContent = match.soudal;
                 document.getElementById('artNr').textContent = match.artNr;
                 document.getElementById('farbe').textContent = match.farbe;
+                document.getElementById('beschreibung').textContent = match.beschreibung;
                 document.getElementById('eigenschaften').textContent = match.eigenschaften;
                 document.getElementById('anwendung').textContent = match.anwendung;
                 document.getElementById('link').href = match.link || "#";
                 
+                // Bild-Logik fixiert auf Index 9 (Spalte J)
                 if (match.imgUrl && match.imgUrl.startsWith('http')) {
                     imgElement.src = match.imgUrl;
                     imgElement.style.display = 'block';
