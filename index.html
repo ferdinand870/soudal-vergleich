@@ -56,14 +56,17 @@
             const response = await fetch(sheetUrl);
             const data = await response.text();
             
-            // Trennung der Zeilen, bereinigt um leere Zeilen
+            // Trennung der Zeilen
             const rows = data.split(/\r?\n/).slice(1).filter(row => row.trim() !== "");
             
             database = rows.map(row => {
-                // Diese Logik erkennt Kommas innerhalb von Anführungszeichen korrekt
-                const columns = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || row.split(',');
+                // Bestimmung des Trennzeichens (Komma oder Semikolon)
+                const delimiter = row.includes(';') ? ';' : ',';
                 
-                // Wir säubern die Daten von Anführungszeichen
+                // Präzise Trennung: Nur am Trennzeichen, ignoriert Kommas in Anführungszeichen
+                // Verhindert das Aufsplitten bei Leerzeichen
+                const columns = row.split(new RegExp(`\\${delimiter}(?=(?:(?:[^"]*"){2})*[^"]*$)`));
+                
                 const clean = (val) => val ? val.replace(/^"|"$/g, '').trim() : "";
 
                 return {
@@ -85,7 +88,6 @@
 
     function fillCompanyDropdown() {
         const compSelect = document.getElementById('compSelect');
-        // Wir nehmen nur die eindeutigen Namen aus Spalte A
         const companies = [...new Set(database.map(p => p.compName))].sort();
         
         compSelect.innerHTML = '<option value="">-- Bitte wählen --</option>';
@@ -106,7 +108,6 @@
         resultDiv.style.display = 'none';
 
         if (compValue) {
-            // Filtert alle Produkte, die exakt zu diesem Wettbewerber gehören
             const products = database.filter(p => p.compName === compValue).sort((a,b) => a.compProd.localeCompare(b.compProd));
             products.forEach(p => {
                 let opt = document.createElement('option');
