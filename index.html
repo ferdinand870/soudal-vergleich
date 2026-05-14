@@ -41,7 +41,7 @@
 </div>
 
 <script>
-    // 1. Passwort-Schutz (UGB-Konformität für internen Gebrauch)
+// 1. Passwort-Schutz
     const passwortAbfrage = prompt("Bitte Soudal-Passwort eingeben:");
     if (passwortAbfrage !== "Soudal2026") { 
         alert("Zugriff verweigert!");
@@ -49,39 +49,43 @@
     }
 
     let database = [];
-    // 2. Dein korrekter Google-CSV-Link
     const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTNz0aKaUP6s9baivOaCAKKyMFTcQOQ22qGV1AQqX3k3zJOI2bcnlkV3HGDYU6QgPjz53P_X4LrL187/pub?output=csv';
 
     async function loadDatabase() {
         try {
             const response = await fetch(sheetUrl);
             const data = await response.text();
-            const rows = data.split('\n').slice(1);
+            
+            // Trennung der Zeilen, bereinigt um leere Zeilen
+            const rows = data.split(/\r?\n/).slice(1).filter(row => row.trim() !== "");
             
             database = rows.map(row => {
-                // Trennung nach Komma oder Semikolon (robust für Excel-Exporte)
-                const delimiter = row.includes(';') ? ';' : ',';
-                const columns = row.split(new RegExp(`${delimiter}(?=(?:(?:[^"]*"){2})*[^"]*$)`));
+                // Diese Logik erkennt Kommas innerhalb von Anführungszeichen korrekt
+                const columns = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || row.split(',');
                 
+                // Wir säubern die Daten von Anführungszeichen
+                const clean = (val) => val ? val.replace(/^"|"$/g, '').trim() : "";
+
                 return {
-                    compName: columns[0]?.replace(/"/g, '').trim(),
-                    compProd: columns[1]?.replace(/"/g, '').trim(),
-                    soudal: columns[2]?.replace(/"/g, '').trim(),
-                    facts: columns[3]?.replace(/"/g, '').trim(),
-                    link: columns[4]?.replace(/"/g, '').trim()
+                    compName: clean(columns[0]),
+                    compProd: clean(columns[1]),
+                    soudal: clean(columns[2]),
+                    facts: clean(columns[3]),
+                    link: clean(columns[4])
                 };
-            }).filter(p => p.compName && p.compName !== ""); 
+            }).filter(p => p.compName !== ""); 
 
             fillCompanyDropdown();
             document.getElementById('status').innerText = "Datenbank bereit (" + database.length + " Produkte geladen)";
         } catch (e) {
-            document.getElementById('status').innerText = "Fehler: Datenbank konnte nicht geladen werden.";
+            document.getElementById('status').innerText = "Fehler beim Laden der Daten.";
             console.error(e);
         }
     }
 
     function fillCompanyDropdown() {
         const compSelect = document.getElementById('compSelect');
+        // Wir nehmen nur die eindeutigen Namen aus Spalte A
         const companies = [...new Set(database.map(p => p.compName))].sort();
         
         compSelect.innerHTML = '<option value="">-- Bitte wählen --</option>';
@@ -102,6 +106,7 @@
         resultDiv.style.display = 'none';
 
         if (compValue) {
+            // Filtert alle Produkte, die exakt zu diesem Wettbewerber gehören
             const products = database.filter(p => p.compName === compValue).sort((a,b) => a.compProd.localeCompare(b.compProd));
             products.forEach(p => {
                 let opt = document.createElement('option');
